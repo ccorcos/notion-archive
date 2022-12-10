@@ -3,3 +3,4 @@ node_modules
 *.log
 build
 token.txt
+data

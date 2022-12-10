@@ -9,63 +9,9 @@ import BetterSqlite3 from "better-sqlite3"
 import * as fs from "fs-extra"
 import * as path from "path"
 
-// 		this.batch = new BatchQueue(async (args) => {
-// 			insertRows(args)
-// 			return []
-// 		}, 0) as any
-
-// 		this.getQuery = this.db.prepare(
-// 			`select data from cache where tabl=$table and id=$id`
-// 		)
-
-// 		// Download state
-// 		this.db
-// 			.prepare(
-// 				`
-// 			create table if not exists download_state (
-// 				key text,
-// 				done int,
-// 				pending int,
-// 				primary key (key),
-// 				unique (key)
-// 			)
-// 			`.trim()
-// 			)
-// 			.run()
-
-// 		this.db
-// 			.prepare(
-// 				`
-// 			create index if not exists download_state_done on download_state (
-// 				done,
-// 				pending,
-// 				key
-// 			)
-// 			`.trim()
-// 			)
-// 			.run()
-
-// 		this.dequeueQuery = this.db.prepare(
-// 			`select key from download_state where done = 0 and pending = 0 limit 100`
-// 		)
-// 		const pendingQuery = this.db.prepare(
-// 			`update download_state set pending = 1 where key = $key`
-// 		)
-// 		this.makePending = this.db.transaction((objs) => {
-// 			for (const { key } of objs) {
-// 				pendingQuery.run({ key })
-// 			}
-// 		})
-// 		this.hasQuery = this.db.prepare(
-// 			`select done from download_state where key = $key`
-// 		)
-// 		this.addQuery = this.db.prepare(
-// 			`insert or ignore into download_state (key, done, pending) values ($key, 0, 0)`
-// 		)
-// 		this.doneQuery = this.db.prepare(
-// 			`update download_state set done = 1 where key = $key`
-// 		)
-// 	}
+function debug(...args: any[]) {
+	console.log("CACHE:", ...args)
+}
 
 type Caches = {
 	block: BlockObjectResponse
@@ -111,11 +57,14 @@ export class Cache {
 		return {
 			get: (id: string) => {
 				const result = this.getQuery.all({ name, id })
+				debug("miss", id)
 				if (result.length === 0) return
 				if (result.length > 1) throw new Error(">1")
+				debug("hit", id)
 				return JSON.parse(result[0].data) as Caches[T]
 			},
 			set: (id: string, obj: Caches[T]) => {
+				debug("save", id)
 				this.setQuery.run({ name, id, data: JSON.stringify(obj) })
 			},
 		}
