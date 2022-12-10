@@ -1,12 +1,4 @@
-# TypeScript Library Boilerplate
+# Notion Archive
 
-## Getting Started
+Create a static HTML archive from a Notion page or workspace.
 
-```sh
-git clone git@github.com:ccorcos/typescript-library.git library
-cd library
-git remote remove origin
-
-npm install
-npm run release
-```

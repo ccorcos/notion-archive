@@ -1,9 +1,9 @@
 {
-	"name": "typescript-library",
+	"name": "notion-archive",
 	"version": "0.0.2",
-	"description": "boilerplate for typescript libraries",
+	"description": "Create an HTML archive from Notion.",
 	"repository": {
-		"url": "https://github.com/ccorcos/typescript-library"
+		"url": "https://github.com/ccorcos/notion-archive"
 	},
 	"main": "index.js",
 	"scripts": {
