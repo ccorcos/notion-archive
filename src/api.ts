@@ -1,7 +1,3 @@
-// Goal here is to simply cache the API.
-// Then we can write a crawler that works with or without the cache.
-// And we can also write very targeted cache invalidations to only reload a single page.
-
 import { Client as NotionClient } from "@notionhq/client"
 import {
 	BlockObjectResponse,

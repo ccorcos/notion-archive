@@ -1,5 +1,8 @@
 import { Cache } from "./Cache"
 
+/**
+ * Uses the cache to crawl an entire subtree.
+ */
 export class Crawler {
 	crawledBlock = new Set<string>()
 	crawledBlockChildren = new Set<string>()
