@@ -1,4 +1,4 @@
-import { Cache } from "./Cache"
+import { CachedApi } from "./CachedApi"
 
 function debug(...args: any[]) {
 	console.log("CRAWL:", ...args)
@@ -13,7 +13,7 @@ export class Crawler {
 	crawledDatabase = new Set<string>()
 	crawledDatabaseChildren = new Set<string>()
 
-	constructor(public cache: Cache) {}
+	constructor(public cache: CachedApi) {}
 
 	async crawlBlock(id: string) {
 		if (this.crawledBlock.has(id)) return

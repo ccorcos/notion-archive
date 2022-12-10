@@ -7,7 +7,8 @@
 	},
 	"main": "index.js",
 	"scripts": {
-		"start": "tsx src/index.ts",
+		"render": "tsx src/render.ts",
+		"download": "tsx src/download.ts",
 		"clean": "rm -rf build",
 		"build": "tsc",
 		"typecheck": "tsc --noEmit",

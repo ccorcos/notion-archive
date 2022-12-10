@@ -1,5 +1,3 @@
-import * as api from "./api"
-
 import {
 	BlockObjectResponse,
 	DatabaseObjectResponse,
@@ -29,7 +27,7 @@ export class Cache {
 	private getQuery: BetterSqlite3.Statement
 	private setQuery: BetterSqlite3.Statement
 
-	constructor(dbPath: string) {
+	constructor(dbPath: string, private throwOnMiss = false) {
 		fs.mkdirpSync(path.parse(dbPath).dir)
 		this.db = new BetterSqlite3(dbPath)
 
@@ -70,39 +68,47 @@ export class Cache {
 		}
 	}
 
-	async getBlock(id: string) {
+	miss(arg: string) {
+		if (this.throwOnMiss) throw new Error("Miss: " + arg)
+	}
+
+	getBlock(id: string) {
 		const cached = this.cached("block").get(id)
 		if (cached) return cached
-
-		const block = await api.getBlock(id)
-		this.cached("block").set(block.id, block)
-		return block
+		this.miss("block " + id)
 	}
 
-	async getDatabase(id: string) {
+	setBlock(block: BlockObjectResponse) {
+		this.cached("block").set(block.id, block)
+	}
+
+	getDatabase(id: string) {
 		const cached = this.cached("database").get(id)
 		if (cached) return cached
-
-		const database = await api.getDatabase(id)
-		this.cached("database").set(database.id, database)
-		return database
+		this.miss("database " + id)
 	}
 
-	async getBlockChildren(id: string) {
+	setDatabase(database: DatabaseObjectResponse) {
+		this.cached("database").set(database.id, database)
+	}
+
+	getBlockChildren(id: string) {
 		const cached = this.cached("blockChildren").get(id)
 		if (cached) return cached
-
-		const children = await api.getBlockChildren(id)
-		this.cached("blockChildren").set(id, children)
-		return children
+		this.miss("blockChildren " + id)
 	}
 
-	async getDatabaseChildren(id: string) {
+	setBlockChildren(id: string, children: BlockObjectResponse[]) {
+		this.cached("blockChildren").set(id, children)
+	}
+
+	getDatabaseChildren(id: string) {
 		const cached = this.cached("databaseChildren").get(id)
 		if (cached) return cached
+		this.miss("databaseChildren " + id)
+	}
 
-		const children = await api.getDatabaseChildren(id)
+	setDatabaseChildren(id: string, children: PageObjectResponse[]) {
 		this.cached("databaseChildren").set(id, children)
-		return children
 	}
 }
