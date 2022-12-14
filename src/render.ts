@@ -129,13 +129,13 @@ function renderMentionToken(token: MentionRichTextItemResponse) {
 		return `<time>${formatDateResponse(token.mention.date)}</time>`
 
 	if (token.mention.type === "database") {
-		const url = token.mention.database.id
+		const url = token.mention.database.id + ".html"
 		const text = escapeHtml(token.plain_text)
 		return `<a class="page-mention" href="${url}">${text}</a>`
 	}
 
 	if (token.mention.type === "page") {
-		const url = token.mention.page.id
+		const url = token.mention.page.id + ".html"
 		const text = escapeHtml(token.plain_text)
 		return `<a class="page-mention" href="${url}">${text}</a>`
 	}
@@ -387,26 +387,26 @@ async function renderBlock(api: Api, block: BlockObjectResponse) {
 		case "link_to_page": {
 			if (block.link_to_page.type === "database_id") {
 				// TODO: name?
-				const id = block.link_to_page.database_id
+				const id = block.link_to_page.database_id + ".html"
 				return `<p><a class="page-mention" href="${id}">${id}</a></p>`
 			}
 			if (block.link_to_page.type === "page_id") {
 				// TODO: name?
-				const id = block.link_to_page.page_id
+				const id = block.link_to_page.page_id + ".html"
 				return `<p><a class="page-mention" href="${id}">${id}</a></p>`
 			}
 			return ""
 		}
 
 		case "child_page": {
-			const url = block.id
+			const url = block.id + ".html"
 			const title = escapeHtml(block.child_page.title)
 			return `<p><a class="page-mention" href="${url}">${title}</a></p>`
 		}
 
 		case "child_database": {
 			// TODO: display database inline?
-			const url = block.id
+			const url = block.id + ".html"
 			const title = escapeHtml(block.child_database.title)
 			return `<p><a class="page-mention" href="${url}">${title}</a></p>`
 		}
@@ -539,10 +539,6 @@ async function main() {
 		})
 	)
 }
-
-// npm run render  1.14s user 0.27s system 3% cpu 38.612 total
-// npm run render  0.93s user 0.19s system 8% cpu 13.000 total
-// npm run render  0.56s user 0.12s system 37% cpu 1.825 total
 
 main()
 	.then(() => process.exit(0))
