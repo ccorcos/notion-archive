@@ -27,7 +27,7 @@ export class Cache {
 	private getQuery: BetterSqlite3.Statement
 	private setQuery: BetterSqlite3.Statement
 
-	constructor(dbPath: string, private throwOnMiss = false) {
+	constructor(dbPath: string) {
 		fs.mkdirpSync(path.parse(dbPath).dir)
 		this.db = new BetterSqlite3(dbPath)
 
@@ -55,8 +55,7 @@ export class Cache {
 		return {
 			get: (id: string) => {
 				const result = this.getQuery.all({ name, id })
-				debug("miss", id)
-				if (result.length === 0) return
+				if (result.length === 0) return debug("miss", id)
 				if (result.length > 1) throw new Error(">1")
 				debug("hit", id)
 				return JSON.parse(result[0].data) as Caches[T]
@@ -68,14 +67,9 @@ export class Cache {
 		}
 	}
 
-	miss(arg: string) {
-		if (this.throwOnMiss) throw new Error("Miss: " + arg)
-	}
-
 	getBlock(id: string) {
 		const cached = this.cached("block").get(id)
 		if (cached) return cached
-		this.miss("block " + id)
 	}
 
 	setBlock(block: BlockObjectResponse) {
@@ -85,7 +79,6 @@ export class Cache {
 	getDatabase(id: string) {
 		const cached = this.cached("database").get(id)
 		if (cached) return cached
-		this.miss("database " + id)
 	}
 
 	setDatabase(database: DatabaseObjectResponse) {
@@ -95,7 +88,6 @@ export class Cache {
 	getBlockChildren(id: string) {
 		const cached = this.cached("blockChildren").get(id)
 		if (cached) return cached
-		this.miss("blockChildren " + id)
 	}
 
 	setBlockChildren(id: string, children: BlockObjectResponse[]) {
@@ -105,7 +97,6 @@ export class Cache {
 	getDatabaseChildren(id: string) {
 		const cached = this.cached("databaseChildren").get(id)
 		if (cached) return cached
-		this.miss("databaseChildren " + id)
 	}
 
 	setDatabaseChildren(id: string, children: PageObjectResponse[]) {

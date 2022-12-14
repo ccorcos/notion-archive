@@ -2,7 +2,7 @@ import { api, Api } from "./api"
 import { Cache } from "./Cache"
 
 /**
- * Simple wrapper around the API with a caching layer.
+ * Read from cache or API, and write to cache.
  */
 export class CachedApi implements Api {
 	constructor(private cache: Cache) {}

@@ -1,4 +1,4 @@
-export function uuid(str: string) {
+export function toUuid(str: string) {
 	str = str.replace(/-/g, "")
 
 	return [
