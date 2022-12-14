@@ -2,9 +2,11 @@ import {
 	BlockObjectResponse,
 	EquationRichTextItemResponse,
 	MentionRichTextItemResponse,
+	PageObjectResponse,
 	ParagraphBlockObjectResponse,
 	RichTextItemResponse,
 	TextRichTextItemResponse,
+	UserObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints"
 import { mkdirpSync, writeFile } from "fs-extra"
 import { Api, getBlockChildren } from "./api"
@@ -50,11 +52,13 @@ function renderAnnotations(html: string, annotations: AnnotationResponse) {
 	return html
 }
 
-function renderTextToken(token: TextRichTextItemResponse) {
+function renderTextToken(token: TextRichTextItemResponse, plain = false) {
 	let html = escapeHtml(token.plain_text)
 
-	html = renderAnnotations(html, token.annotations)
-	if (token.href) html = `<a href="${token.href}">${html}</a>`
+	if (!plain) {
+		html = renderAnnotations(html, token.annotations)
+		if (token.href) html = `<a href="${token.href}">${html}</a>`
+	}
 
 	return html
 }
@@ -86,7 +90,7 @@ function formatDate(str: string) {
 	})
 }
 
-function formatDateTime(str: string, timeZone: string | undefined) {
+function formatDateTime(str: string, timeZone?: string | undefined) {
 	const d = new Date(str)
 	const date = d.toLocaleDateString(locale, {
 		year: "numeric",
@@ -124,39 +128,50 @@ function formatDateResponse(date: DateResponse) {
 	}
 }
 
-function renderMentionToken(token: MentionRichTextItemResponse) {
-	if (token.mention.type === "date")
-		return `<time>${formatDateResponse(token.mention.date)}</time>`
+function renderMentionToken(token: MentionRichTextItemResponse, plain = false) {
+	if (token.mention.type === "date") {
+		const text = formatDateResponse(token.mention.date)
+		if (plain) return text
+		return `<time>${text}</time>`
+	}
 
 	if (token.mention.type === "database") {
-		const url = token.mention.database.id + ".html"
 		const text = escapeHtml(token.plain_text)
+		if (plain) return text
+		const url = token.mention.database.id + ".html"
 		return `<a class="page-mention" href="${url}">${text}</a>`
 	}
 
 	if (token.mention.type === "page") {
-		const url = token.mention.page.id + ".html"
 		const text = escapeHtml(token.plain_text)
+		if (plain) return text
+		const url = token.mention.page.id + ".html"
 		return `<a class="page-mention" href="${url}">${text}</a>`
 	}
 
 	if (token.mention.type === "link_preview") {
 		const text = escapeHtml(token.plain_text)
+		if (plain) return text
 		const url = token.mention.link_preview.url
 		return `<a href="${url}">${text}</a>`
 	}
 
 	if (token.mention.type === "template_mention") {
 		if (token.mention.template_mention.type === "template_mention_date") {
-			const text = token.mention.template_mention.template_mention_date
-			return `<span>{{${text}}}</span>`
+			const date = token.mention.template_mention.template_mention_date
+			const text = `{{${date}}}`
+			if (plain) return text
+			return `<span>${text}</span>`
 		} else {
-			const text = token.mention.template_mention.template_mention_user
-			return `<span>{{${text}}}</span>`
+			const user = token.mention.template_mention.template_mention_user
+			const text = `{{${user}}}`
+			if (plain) return text
+			return `<span>${text}</span>`
 		}
 	}
 	if (token.mention.type === "user") {
 		const text = escapeHtml(token.plain_text)
+		if (plain) return text
 		const id = token.mention.user.id
 		return `<span class="user-mention" data-id="${id}">${text}</span>`
 	}
@@ -164,11 +179,11 @@ function renderMentionToken(token: MentionRichTextItemResponse) {
 	unreachable(token.mention)
 }
 
-function renderRichText(text: RichTextItemResponse[]) {
+function renderRichText(text: RichTextItemResponse[], plain = false) {
 	const strings = text.map((token) => {
-		if (token.type === "text") return renderTextToken(token)
+		if (token.type === "text") return renderTextToken(token, plain)
 		if (token.type === "equation") return renderEquationToken(token)
-		if (token.type === "mention") return renderMentionToken(token)
+		if (token.type === "mention") return renderMentionToken(token, plain)
 		unreachable(token)
 	})
 	return strings.join("")
@@ -512,6 +527,161 @@ async function renderPage(api: Api, id: string) {
 	)
 }
 
+type Property = PageObjectResponse["properties"][string]
+
+function renderProperty(value: Property, pageId: string): string {
+	switch (value.type) {
+		case "checkbox":
+		case "number":
+			if (value[value.type] === null) return ""
+			return value[value.type].toString()
+
+		case "phone_number":
+			if (value.phone_number === null) return ""
+			const phone = value.phone_number
+			const numbers = phone.replace(/[^0-9]/g, "")
+			return `<a href="tel:${numbers}">${phone}</a>`
+
+		case "url":
+			if (value.url === null) return ""
+			const url = value.url
+			return `<a href="${url}">${url}</a>`
+
+		case "email":
+			if (value.email === null) return ""
+			const email = value.email
+			return `<a href="mailto:${email}">${email}</a>`
+
+		case "rich_text":
+			return renderRichText(value.rich_text)
+
+		case "title":
+			const text = renderRichText(value.title, true)
+			const pageUrl = pageId + ".html"
+			return `<a href="${pageUrl}">${text}</a>`
+
+		case "date":
+			if (value.date === null) return ""
+			return formatDateResponse(value.date)
+
+		case "last_edited_time":
+		case "created_time":
+			return formatDateTime(value[value.type])
+
+		case "multi_select":
+			return value.multi_select
+				.map((item) => {
+					return `<span class="token" style="background:${item.color}">${item.name}</span>`
+				})
+				.join(", ")
+
+		case "select":
+		case "status":
+			const item = value[value.type]
+			if (!item) return ""
+			return `<span class="token" style="background:${item.color}">${item.name}</span>`
+
+		case "last_edited_by":
+		case "created_by":
+			return (value[value.type] as UserObjectResponse)?.name || ""
+
+		case "people":
+			return value.people
+				.map((person) => (person as UserObjectResponse)?.name || "")
+				.join(", ")
+
+		case "files": {
+			return value.files
+				.map((file) => {
+					if (file.type === "external") {
+						const url = file.external.url
+						return `<a href=${url}>${file.name}</a>`
+					} else if (file.type === "file") {
+						const url = file.file.url
+						return `<a href=${url}>${file.name}</a>`
+					}
+				})
+				.filter(Boolean)
+				.join(", ")
+		}
+
+		case "relation":
+			return value.relation
+				.map((relation) => {
+					// TODO: page title?
+					const url = relation.id
+					return `<a href=${url}>${url}</a>`
+				})
+				.join(", ")
+
+		case "formula": {
+			const formula = value.formula
+			if (formula.type === "boolean") {
+				return Boolean(formula.boolean).toString()
+			} else if (formula.type === "date") {
+				if (formula.date === null) return ""
+				return formatDateResponse(formula.date)
+			} else if (formula.type === "number") {
+				if (formula.number === null) return ""
+				return formula.number.toString()
+			} else if (formula.type === "string") {
+				return formula.string || ""
+			} else {
+				unreachable(formula)
+			}
+		}
+
+		case "rollup":
+			if (value.rollup.type === "date") {
+				if (value.rollup.date === null) return ""
+				return formatDateResponse(value.rollup.date)
+			} else if (value.rollup.type === "number") {
+				if (value.rollup.number === null) return ""
+				return value.rollup.number.toString()
+			} else if (value.rollup.type === "array") {
+				// TODO: fix types here so we don't have to cast to any.
+				return value.rollup.array
+					.map((item) => renderProperty(item as any, pageId))
+					.join(", ")
+			} else {
+				unreachable(value.rollup)
+			}
+		default:
+			unreachable(value)
+	}
+}
+
+async function renderDatabase(api: Api, id: string) {
+	const database = await api.getDatabase(id)
+	if (!database) throw new Error("Missing database: " + id)
+
+	const children = await api.getDatabaseChildren(id)
+	if (!children) throw new Error("Missing database children: " + id)
+
+	const title = renderRichText(database.title)
+
+	const props = Object.values(database.properties)
+
+	const row1 = props.map((prop) => `<th>${prop.name}</th>`).join("")
+
+	const rows = children
+		.map((child) => {
+			const data = props
+				.map((prop) => {
+					const value = child.properties[prop.name]
+					if (!value) return `<td></td>`
+					return `<td>${renderProperty(value, child.id)}</td>`
+				})
+				.join("")
+			return `<tr>${data}</tr>`
+		})
+		.join("")
+
+	const table = `<table>${row1}${rows}</table>`
+
+	return `<h1>${title}</h1>` + table
+}
+
 const rootPageId = toUuid("0e27612403084b2fb4a3166edafd623a")
 
 async function main() {
@@ -530,14 +700,22 @@ async function main() {
 	// Render pages.
 	mkdirpSync(__dirname + "/../rendered")
 
-	await Promise.all(
-		pages.map(async (pageId) => {
-			let html = await renderPage(api, pageId)
-			html = `<head><meta charset="UTF-8"></head>` + html
-			await writeFile(__dirname + "/../rendered/" + pageId + ".html", html)
-			console.log("Rendered", pageId)
-		})
-	)
+	const write = async (id: string, html: string) => {
+		html = `<head><meta charset="UTF-8"></head>` + html
+		await writeFile(__dirname + "/../rendered/" + id + ".html", html)
+		console.log("Rendered:", id)
+	}
+
+	await Promise.all([
+		// ...pages.map(async (pageId) => {
+		// 	const html = await renderPage(api, pageId)
+		// 	await write(pageId, html)
+		// }),
+		...databases.map(async (databaseId) => {
+			const html = await renderDatabase(api, databaseId)
+			await write(databaseId, html)
+		}),
+	])
 }
 
 main()
