@@ -9,7 +9,7 @@ import * as path from "path"
 import { Api } from "./api"
 
 function debug(...args: any[]) {
-	console.log("CACHE:", ...args)
+	// console.log("CACHE:", ...args)
 }
 
 type Caches = {

@@ -6,9 +6,10 @@ import {
 	RichTextItemResponse,
 	TextRichTextItemResponse,
 } from "@notionhq/client/build/src/api-endpoints"
-import { mkdirpSync, writeFileSync } from "fs-extra"
+import { mkdirpSync, writeFile } from "fs-extra"
 import { Api, getBlockChildren } from "./api"
 import { Cache } from "./Cache"
+import { Crawler } from "./Crawler"
 import { unreachable } from "./helpers/unreachable"
 import { toUuid } from "./helpers/uuid"
 
@@ -432,7 +433,14 @@ async function renderBlockChildren(
 
 		let html = ""
 		let list: "bulleted_list_item" | "numbered_list_item" | "to_do" | undefined
-		for (const child of children) {
+
+		const renderedChildren = await Promise.all(
+			children.map(
+				async (child) => [child, await renderBlock(api, child)] as const
+			)
+		)
+
+		for (const [child, rendered] of renderedChildren) {
 			// Close list.
 			if (list !== undefined && list !== child.type) {
 				if (list === "to_do") html += "</ul>"
@@ -456,7 +464,7 @@ async function renderBlockChildren(
 					list = child.type
 				}
 			}
-			html += await renderBlock(api, child)
+			html += rendered
 		}
 
 		// Close final list.
@@ -488,9 +496,15 @@ async function renderPage(api: Api, id: string) {
 	// page.cover
 	// page.last_edited_time
 
-	const property = page.properties.title
-	if (property.type !== "title") throw new Error("Missing title: " + id)
-	const title = renderRichText(property.title)
+	let title = ""
+	const property = Object.values(page.properties).find(
+		(prop) => prop.type === "title"
+	)
+	if (property && property.type === "title") {
+		title = renderRichText(property.title)
+	} else {
+		console.warn("Page missing title: ", id)
+	}
 
 	return (
 		`<h1>${title}</h1>` +
@@ -504,13 +518,31 @@ async function main() {
 	const cache = new Cache("data/cache2.db")
 	const api = cache.api
 
-	let html = await renderPage(api, rootPageId)
+	// Crawl and collect all the pages.
+	const pages: string[] = []
+	const databases: string[] = []
+	const crawler = new Crawler(api, (obj) => {
+		if (obj.object === "page") pages.push(obj.id)
+		if (obj.object === "database") databases.push(obj.id)
+	})
+	await crawler.crawlPage(rootPageId)
 
-	html = `<head><meta charset="UTF-8"></head>` + html
-
+	// Render pages.
 	mkdirpSync(__dirname + "/../rendered")
-	writeFileSync(__dirname + "/../rendered/" + rootPageId + ".html", html)
+
+	await Promise.all(
+		pages.map(async (pageId) => {
+			let html = await renderPage(api, pageId)
+			html = `<head><meta charset="UTF-8"></head>` + html
+			await writeFile(__dirname + "/../rendered/" + pageId + ".html", html)
+			console.log("Rendered", pageId)
+		})
+	)
 }
+
+// npm run render  1.14s user 0.27s system 3% cpu 38.612 total
+// npm run render  0.93s user 0.19s system 8% cpu 13.000 total
+// npm run render  0.56s user 0.12s system 37% cpu 1.825 total
 
 main()
 	.then(() => process.exit(0))

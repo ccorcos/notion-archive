@@ -1,7 +1,12 @@
+import {
+	BlockObjectResponse,
+	DatabaseObjectResponse,
+	PageObjectResponse,
+} from "@notionhq/client/build/src/api-endpoints"
 import { Api } from "./api"
 
 function debug(...args: any[]) {
-	console.log("CRAWL:", ...args)
+	// console.log("CRAWL:", ...args)
 }
 
 /**
@@ -14,7 +19,12 @@ export class Crawler {
 	crawledDatabase = new Set<string>()
 	crawledDatabaseChildren = new Set<string>()
 
-	constructor(public api: Api, private handler?: () => void) {}
+	constructor(
+		public api: Api,
+		private handler: (
+			obj: PageObjectResponse | DatabaseObjectResponse | BlockObjectResponse
+		) => void = () => {}
+	) {}
 
 	async crawlPage(id: string) {
 		if (this.crawledPage.has(id)) return
@@ -27,6 +37,7 @@ export class Crawler {
 		}
 
 		await this.crawlBlockChildren(id)
+		this.handler(page)
 	}
 
 	async crawlBlockChildren(id: string) {
@@ -47,6 +58,7 @@ export class Crawler {
 			} else {
 				if (child.has_children) await this.crawlBlockChildren(child.id)
 			}
+			this.handler(child)
 		}
 	}
 
@@ -76,6 +88,7 @@ export class Crawler {
 		}
 
 		await this.crawlDatabaseChildren(id)
+		this.handler(database)
 	}
 
 	async crawlDatabaseChildren(id: string) {

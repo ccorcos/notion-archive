@@ -2,8 +2,8 @@ import { Cache } from "./Cache"
 import { toUuid } from "./helpers/uuid"
 
 async function main() {
-	const cache = new Cache("data/cache.db")
-	console.log(cache.api.getBlock(toUuid("0e27612403084b2fb4a3166edafd623a")))
+	const cache = new Cache("data/cache2.db")
+	console.log(cache.api.getPage(toUuid("2be911cb-af68-47d6-8475-6a8634cff312")))
 }
 
 main()
