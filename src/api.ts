@@ -9,6 +9,13 @@ import { readFileSync } from "fs"
 const token = readFileSync(__dirname + "/../token.txt", "utf8")
 const notion = new NotionClient({ auth: token })
 
+export type Api = {
+	getBlock: (id: string) => Promise<BlockObjectResponse | undefined>
+	getDatabase: (id: string) => Promise<DatabaseObjectResponse | undefined>
+	getBlockChildren: (id: string) => Promise<BlockObjectResponse[] | undefined>
+	getDatabaseChildren: (id: string) => Promise<PageObjectResponse[] | undefined>
+}
+
 export async function getBlock(id: string) {
 	const response = await notion.blocks.retrieve({ block_id: id })
 	const block = response as BlockObjectResponse
@@ -60,4 +67,11 @@ export async function getDatabaseChildren(id: string) {
 	}
 
 	return children
+}
+
+export const api: Api = {
+	getBlock,
+	getDatabase,
+	getBlockChildren,
+	getDatabaseChildren,
 }
