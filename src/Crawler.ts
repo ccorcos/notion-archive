@@ -1,4 +1,4 @@
-import { CachedApi } from "./CachedApi"
+import { Api } from "./api"
 
 function debug(...args: any[]) {
 	console.log("CRAWL:", ...args)
@@ -13,13 +13,17 @@ export class Crawler {
 	crawledDatabase = new Set<string>()
 	crawledDatabaseChildren = new Set<string>()
 
-	constructor(public cache: CachedApi) {}
+	constructor(public api: Api) {}
 
 	async crawlBlock(id: string) {
 		if (this.crawledBlock.has(id)) return
 
 		debug("block", id)
-		const block = await this.cache.getBlock(id)
+		const block = await this.api.getBlock(id)
+		if (!block) {
+			console.warn("Missing block:", id)
+			return
+		}
 
 		if (block.type === "child_database") {
 			await this.crawlDatabase(id)
@@ -32,7 +36,11 @@ export class Crawler {
 		if (this.crawledBlockChildren.has(id)) return
 
 		debug("blockChildren", id)
-		const children = await this.cache.getBlockChildren(id)
+		const children = await this.api.getBlockChildren(id)
+		if (!children) {
+			console.warn("Missing blockChildren:", id)
+			return
+		}
 		for (const child of children) {
 			await this.crawlBlock(child.id)
 		}
@@ -42,7 +50,12 @@ export class Crawler {
 		if (this.crawledBlock.has(id)) return
 
 		debug("database", id)
-		await this.cache.getDatabase(id)
+		const database = await this.api.getDatabase(id)
+		if (!database) {
+			console.warn("Missing database:", id)
+			return
+		}
+
 		await this.crawlDatabaseChildren(id)
 	}
 
@@ -50,7 +63,11 @@ export class Crawler {
 		if (this.crawledDatabaseChildren.has(id)) return
 
 		debug("databaseChildren", id)
-		const children = await this.cache.getDatabaseChildren(id)
+		const children = await this.api.getDatabaseChildren(id)
+		if (!children) {
+			console.warn("Missing databaseChildren:", id)
+			return
+		}
 		for (const child of children) {
 			this.crawlBlock(child.id)
 		}
