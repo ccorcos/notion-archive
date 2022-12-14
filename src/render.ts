@@ -15,7 +15,7 @@ import { toUuid } from "./helpers/uuid"
 const rootPageId = toUuid("0e27612403084b2fb4a3166edafd623a")
 
 async function main() {
-	const cache = new Cache("data/cache.db")
+	const cache = new Cache("data/cache2.db")
 	const api = cache.api
 
 	let html = await renderPage(api, rootPageId)
@@ -65,8 +65,6 @@ function renderAnnotations(html: string, annotations: AnnotationResponse) {
 
 function renderTextToken(token: TextRichTextItemResponse) {
 	let html = escapeHtml(token.plain_text)
-
-	console.log(token.plain_text, html)
 
 	html = renderAnnotations(html, token.annotations)
 	if (token.href) html = `<a href="${token.href}">${html}</a>`
@@ -440,7 +438,7 @@ async function renderBlock(api: Api, block: BlockObjectResponse) {
 
 async function renderBlockChildren(
 	api: Api,
-	block: BlockObjectResponse
+	block: { id: string; has_children: boolean }
 ): Promise<string> {
 	if (block.has_children) {
 		const children = await getBlockChildren(block.id)
@@ -497,12 +495,21 @@ function childrenDiv(html: string) {
 }
 
 async function renderPage(api: Api, id: string) {
-	const page = await api.getBlock(id)
+	const page = await api.getPage(id)
 	if (!page) throw new Error("Missing page: " + id)
-	if (page.type !== "child_page") throw new Error("Block is not a page: " + id)
 
-	const title = page.child_page.title
-	return `<h1>${title}</h1>` + (await renderBlockChildren(api, page))
+	// page.icon
+	// page.cover
+	// page.last_edited_time
+
+	const property = page.properties.title
+	if (property.type !== "title") throw new Error("Missing title: " + id)
+	const title = renderRichText(property.title)
+
+	return (
+		`<h1>${title}</h1>` +
+		(await renderBlockChildren(api, { id: page.id, has_children: true }))
+	)
 }
 
 main()
