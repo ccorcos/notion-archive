@@ -6,12 +6,14 @@ import {
 import BetterSqlite3 from "better-sqlite3"
 import * as fs from "fs-extra"
 import * as path from "path"
+import { Api } from "./api"
 
 function debug(...args: any[]) {
 	console.log("CACHE:", ...args)
 }
 
 type Caches = {
+	page: PageObjectResponse
 	block: BlockObjectResponse
 	database: DatabaseObjectResponse
 	blockChildren: BlockObjectResponse[]
@@ -55,16 +57,25 @@ export class Cache {
 		return {
 			get: (id: string) => {
 				const result = this.getQuery.all({ name, id })
-				if (result.length === 0) return debug("miss", id)
+				if (result.length === 0) return debug("miss", name, id)
 				if (result.length > 1) throw new Error(">1")
-				debug("hit", id)
+				debug("hit", name, id)
 				return JSON.parse(result[0].data) as Caches[T]
 			},
 			set: (id: string, obj: Caches[T]) => {
-				debug("save", id)
+				debug("save", name, id)
 				this.setQuery.run({ name, id, data: JSON.stringify(obj) })
 			},
 		}
+	}
+
+	getPage(id: string) {
+		const cached = this.cached("page").get(id)
+		if (cached) return cached
+	}
+
+	setPage(page: PageObjectResponse) {
+		this.cached("page").set(page.id, page)
 	}
 
 	getBlock(id: string) {
@@ -101,5 +112,13 @@ export class Cache {
 
 	setDatabaseChildren(id: string, children: PageObjectResponse[]) {
 		this.cached("databaseChildren").set(id, children)
+	}
+
+	api: Api = {
+		getPage: async (...args) => this.getPage(...args),
+		getBlock: async (...args) => this.getBlock(...args),
+		getBlockChildren: async (...args) => this.getBlockChildren(...args),
+		getDatabase: async (...args) => this.getDatabase(...args),
+		getDatabaseChildren: async (...args) => this.getDatabaseChildren(...args),
 	}
 }

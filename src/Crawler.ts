@@ -8,28 +8,25 @@ function debug(...args: any[]) {
  * Uses the cache to crawl an entire subtree.
  */
 export class Crawler {
+	crawledPage = new Set<string>()
 	crawledBlock = new Set<string>()
 	crawledBlockChildren = new Set<string>()
 	crawledDatabase = new Set<string>()
 	crawledDatabaseChildren = new Set<string>()
 
-	constructor(public api: Api) {}
+	constructor(public api: Api, private handler?: () => void) {}
 
-	async crawlBlock(id: string) {
-		if (this.crawledBlock.has(id)) return
+	async crawlPage(id: string) {
+		if (this.crawledPage.has(id)) return
 
-		debug("block", id)
-		const block = await this.api.getBlock(id)
-		if (!block) {
-			console.warn("Missing block:", id)
+		debug("page", id)
+		const page = await this.api.getPage(id)
+		if (!page) {
+			console.warn("Missing page:", id)
 			return
 		}
 
-		if (block.type === "child_database") {
-			await this.crawlDatabase(id)
-		} else {
-			await this.crawlBlockChildren(id)
-		}
+		await this.crawlBlockChildren(id)
 	}
 
 	async crawlBlockChildren(id: string) {
@@ -41,13 +38,35 @@ export class Crawler {
 			console.warn("Missing blockChildren:", id)
 			return
 		}
+
 		for (const child of children) {
-			await this.crawlBlock(child.id)
+			if (child.type === "child_page") {
+				await this.crawlPage(child.id)
+			} else if (child.type === "child_database") {
+				await this.crawlDatabase(child.id)
+			} else {
+				if (child.has_children) await this.crawlBlockChildren(child.id)
+			}
 		}
 	}
 
+	// async crawlBlock(id: string) {
+	// 	if (this.crawledBlock.has(id)) return
+	// 	debug("block", id)
+	// 	const block = await this.api.getBlock(id)
+	// 	if (!block) {
+	// 		console.warn("Missing block:", id)
+	// 		return
+	// 	}
+	// 	if (block.type === "child_database") {
+	// 		await this.crawlDatabase(id)
+	// 	} else {
+	// 		await this.crawlBlockChildren(id)
+	// 	}
+	// }
+
 	async crawlDatabase(id: string) {
-		if (this.crawledBlock.has(id)) return
+		if (this.crawledDatabase.has(id)) return
 
 		debug("database", id)
 		const database = await this.api.getDatabase(id)
@@ -69,7 +88,7 @@ export class Crawler {
 			return
 		}
 		for (const child of children) {
-			this.crawlBlock(child.id)
+			await this.crawlPage(child.id)
 		}
 	}
 }

@@ -10,10 +10,17 @@ const token = readFileSync(__dirname + "/../token.txt", "utf8")
 const notion = new NotionClient({ auth: token })
 
 export type Api = {
+	getPage: (id: string) => Promise<PageObjectResponse | undefined>
 	getBlock: (id: string) => Promise<BlockObjectResponse | undefined>
 	getDatabase: (id: string) => Promise<DatabaseObjectResponse | undefined>
 	getBlockChildren: (id: string) => Promise<BlockObjectResponse[] | undefined>
 	getDatabaseChildren: (id: string) => Promise<PageObjectResponse[] | undefined>
+}
+
+export async function getPage(id: string) {
+	const response = await notion.pages.retrieve({ page_id: id })
+	const page = response as PageObjectResponse
+	return page
 }
 
 export async function getBlock(id: string) {
@@ -70,6 +77,7 @@ export async function getDatabaseChildren(id: string) {
 }
 
 export const api: Api = {
+	getPage,
 	getBlock,
 	getDatabase,
 	getBlockChildren,

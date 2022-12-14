@@ -16,14 +16,7 @@ const rootPageId = toUuid("0e27612403084b2fb4a3166edafd623a")
 
 async function main() {
 	const cache = new Cache("data/cache.db")
-
-	// Just read from cache.
-	const api: Api = {
-		getBlock: async (...args) => cache.getBlock(...args),
-		getBlockChildren: async (...args) => cache.getBlockChildren(...args),
-		getDatabase: async (...args) => cache.getDatabase(...args),
-		getDatabaseChildren: async (...args) => cache.getDatabaseChildren(...args),
-	}
+	const api = cache.api
 
 	let html = await renderPage(api, rootPageId)
 
@@ -31,7 +24,6 @@ async function main() {
 
 	mkdirpSync(__dirname + "/../rendered")
 	writeFileSync(__dirname + "/../rendered/" + rootPageId + ".html", html)
-	// console.log()
 }
 
 function escapeHtml(text: string) {

@@ -12,6 +12,20 @@ export class CachedApi implements Api {
 		console.warn("Missing " + message)
 	}
 
+	async getPage(id: string) {
+		const cached = this.cache.getPage(id)
+		if (cached) return cached
+
+		const page = await api.getPage(id)
+		if (!page) {
+			this.missing("page: " + id)
+			return
+		}
+
+		this.cache.setPage(page)
+		return page
+	}
+
 	async getBlock(id: string) {
 		const cached = this.cache.getBlock(id)
 		if (cached) return cached
@@ -51,6 +65,9 @@ export class CachedApi implements Api {
 		}
 
 		this.cache.setBlockChildren(id, children)
+		// Denormalize
+		for (const child of children) this.cache.setBlock(child)
+
 		return children
 	}
 
@@ -65,6 +82,9 @@ export class CachedApi implements Api {
 		}
 
 		this.cache.setDatabaseChildren(id, children)
+		// Denormalize
+		for (const child of children) this.cache.setPage(child)
+
 		return children
 	}
 }
