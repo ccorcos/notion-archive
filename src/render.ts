@@ -12,20 +12,6 @@ import { Cache } from "./Cache"
 import { unreachable } from "./helpers/unreachable"
 import { toUuid } from "./helpers/uuid"
 
-const rootPageId = toUuid("0e27612403084b2fb4a3166edafd623a")
-
-async function main() {
-	const cache = new Cache("data/cache2.db")
-	const api = cache.api
-
-	let html = await renderPage(api, rootPageId)
-
-	html = `<head><meta charset="UTF-8"></head>` + html
-
-	mkdirpSync(__dirname + "/../rendered")
-	writeFileSync(__dirname + "/../rendered/" + rootPageId + ".html", html)
-}
-
 function escapeHtml(text: string) {
 	return text
 		.replace(/&/g, "&amp;")
@@ -510,6 +496,20 @@ async function renderPage(api: Api, id: string) {
 		`<h1>${title}</h1>` +
 		(await renderBlockChildren(api, { id: page.id, has_children: true }))
 	)
+}
+
+const rootPageId = toUuid("0e27612403084b2fb4a3166edafd623a")
+
+async function main() {
+	const cache = new Cache("data/cache2.db")
+	const api = cache.api
+
+	let html = await renderPage(api, rootPageId)
+
+	html = `<head><meta charset="UTF-8"></head>` + html
+
+	mkdirpSync(__dirname + "/../rendered")
+	writeFileSync(__dirname + "/../rendered/" + rootPageId + ".html", html)
 }
 
 main()
