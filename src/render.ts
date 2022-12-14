@@ -8,7 +8,7 @@ import {
 	TextRichTextItemResponse,
 	UserObjectResponse,
 } from "@notionhq/client/build/src/api-endpoints"
-import { mkdirpSync, writeFile } from "fs-extra"
+import { copyFile, mkdirpSync, writeFile } from "fs-extra"
 import { Api, getBlockChildren } from "./api"
 import { Cache } from "./Cache"
 import { Crawler } from "./Crawler"
@@ -701,16 +701,29 @@ async function main() {
 	mkdirpSync(__dirname + "/../rendered")
 
 	const write = async (id: string, html: string) => {
-		html = `<head><meta charset="UTF-8"></head>` + html
+		html = [
+			"<head>",
+			`<meta charset="UTF-8">`,
+			`<link rel="stylesheet" href="styles.css">`,
+			"</head>",
+			html,
+		].join("")
+
 		await writeFile(__dirname + "/../rendered/" + id + ".html", html)
 		console.log("Rendered:", id)
 	}
 
+	// Copy CSS over.
+	await copyFile(
+		__dirname + "/styles.css",
+		__dirname + "/../rendered/styles.css"
+	)
+
 	await Promise.all([
-		// ...pages.map(async (pageId) => {
-		// 	const html = await renderPage(api, pageId)
-		// 	await write(pageId, html)
-		// }),
+		...pages.map(async (pageId) => {
+			const html = await renderPage(api, pageId)
+			await write(pageId, html)
+		}),
 		...databases.map(async (databaseId) => {
 			const html = await renderDatabase(api, databaseId)
 			await write(databaseId, html)

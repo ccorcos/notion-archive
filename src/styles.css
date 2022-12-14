@@ -1,0 +1,211 @@
+body,
+html {
+	margin: 0px;
+	padding: 0px;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica,
+		"Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol";
+}
+
+html {
+	/* Started with Apple variables */
+	/* https://developer.apple.com/design/human-interface-guidelines/ios/visual-design/dark-mode */
+	/* https://sarunw.com/posts/dark-color-cheat-sheet/#background-color */
+	--background: rgba(255, 255, 255, 1);
+	--background2: rgba(242, 242, 247, 1);
+	--background3: rgba(255, 255, 255, 1);
+
+	--transparent1: rgba(0, 0, 18, 0.1);
+	--transparent2: rgba(0, 0, 18, 0.2);
+	--transparent3: rgba(0, 0, 18, 0.3);
+	--transparent4: rgba(0, 0, 18, 0.4);
+
+	--text-color: rgba(0, 0, 0, 1);
+	--text-color2: rgba(61, 61, 66, 0.6);
+	--text-color3: rgba(61, 61, 66, 0.3);
+	--text-color4: rgba(61, 61, 66, 0.18);
+
+	--placeholder: rgba(61, 61, 66, 0.3);
+	--separator: rgba(61, 61, 66, 0.29);
+	--separator-opaque: rgba(199, 199, 199, 1);
+
+	--blue: rgba(0, 122, 255, 1);
+	--green: rgba(51, 199, 89, 1);
+	--indigo: rgba(89, 87, 214, 1);
+	--orange: rgba(255, 148, 0, 1);
+	--pink: rgba(255, 46, 84, 1);
+	--purple: rgba(176, 82, 222, 1);
+	--red: rgba(255, 59, 48, 1);
+	--teal: rgba(89, 199, 250, 1);
+	--yellow: rgba(255, 204, 0, 1);
+	--gray: rgba(143, 143, 148, 1);
+	--gray2: rgba(173, 173, 179, 1);
+	--gray3: rgba(199, 199, 204, 1);
+	--gray4: rgba(209, 209, 214, 1);
+	--gray5: rgba(230, 230, 235, 1);
+	--gray6: rgba(242, 242, 247, 1);
+}
+
+@media (prefers-color-scheme: dark) {
+	:root {
+		color-scheme: dark;
+	}
+
+	html {
+		/* Apple Variables */
+		--background: rgba(0, 0, 0, 1);
+		--background2: rgb(36, 36, 40);
+		--background3: rgb(48, 48, 52);
+
+		--transparent1: rgba(243, 243, 255, 0.1);
+		--transparent2: rgba(243, 243, 255, 0.2);
+		--transparent3: rgba(243, 243, 255, 0.3);
+		--transparent4: rgba(243, 243, 255, 0.4);
+
+		--text-color: rgba(255, 255, 255, 1);
+		--text-color2: rgba(235, 235, 245, 0.6);
+		--text-color3: rgba(235, 235, 245, 0.3);
+		--text-color4: rgba(235, 235, 245, 0.18);
+
+		--placeholder: rgba(235, 235, 245, 0.3);
+		--separator: rgba(84, 84, 89, 0.6);
+		--separator-opaque: rgba(56, 56, 59, 1);
+
+		--blue: rgba(10, 133, 255, 1);
+		--green: rgba(48, 209, 89, 1);
+		--indigo: rgba(94, 92, 230, 1);
+		--orange: rgba(255, 158, 10, 1);
+		--pink: rgba(255, 56, 94, 1);
+		--purple: rgba(191, 89, 242, 1);
+		--red: rgba(255, 69, 59, 1);
+		--teal: rgba(99, 209, 255, 1);
+		--yellow: rgba(255, 214, 10, 1);
+		--gray: rgba(143, 143, 148, 1);
+		--gray2: rgba(99, 99, 102, 1);
+		--gray3: rgba(71, 71, 74, 1);
+		--gray4: rgba(59, 59, 61, 1);
+		--gray5: rgba(43, 43, 46, 1);
+		--gray6: rgba(28, 28, 31, 1);
+	}
+}
+
+html,
+body {
+	background: var(--background);
+	color: var(--text-color);
+}
+
+body {
+	margin: 12px 24px;
+	/* max-width: var(--doc-width); */
+}
+
+a {
+	color: var(--text-color2);
+}
+
+html {
+	--block-vertical-margin: 12px;
+	--block-indent-size: 25px;
+	--selection-margin: 5px;
+	--doc-width: 44em;
+}
+
+/* Block elements all have bottom spacing. */
+img,
+p,
+li,
+pre {
+	margin-block-start: 0px;
+	margin-block-end: 0px;
+	margin-inline-start: 0px;
+	margin-inline-end: 0px;
+	margin-bottom: var(--block-vertical-margin);
+}
+
+/* Container elements with no spacing. */
+ul,
+ol,
+blockquote {
+	margin-block-start: 0px;
+	margin-block-end: 0px;
+	margin-inline-start: 0px;
+	margin-inline-end: 0px;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+}
+
+ul,
+ol {
+	padding-inline-start: var(--block-indent-size);
+}
+
+li {
+	position: relative;
+}
+
+ul[data-type="checkbox"] {
+	list-style: none;
+}
+
+ul[data-type="checkbox"] input {
+	position: absolute;
+	margin-left: calc(-1 * var(--block-indent-size));
+	margin-right: calc(var(--block-indent-size) - 1em);
+	height: 1em;
+}
+
+ul[data-type="checkbox"] div {
+	display: inline; /* This allows margins to collapse. */
+}
+
+pre {
+	background: var(--gray5);
+	padding: 2em;
+	border-radius: 2.5px;
+	tab-size: 2rem;
+	font-family: "SF Mono", monospace;
+	white-space: pre-wrap;
+}
+
+pre > code {
+	tab-size: 1rem;
+	font-size: 0.85rem;
+	font-family: "SF Mono", monospace;
+}
+
+:not(pre) code {
+	background: var(--gray5);
+	font-size: 0.85rem;
+	padding: 0.1rem 0.2rem;
+	line-height: 1rem;
+	border-radius: 2px;
+	color: var(--text-color1);
+	font-family: "SF Mono", monospace;
+}
+
+blockquote {
+	position: relative;
+	padding-left: var(--block-indent-size);
+}
+
+blockquote::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	left: 0.5em;
+	border-left: 2px solid var(--blockquote-color);
+}
+
+/* Strike the first paragraph of a checkbox. */
+input[type="checkbox"]:checked + div > p:first-child {
+	text-decoration: line-through;
+}
+
+/* Gray out all children that aren't checkboxes. */
+input[type="checkbox"]:checked + div > *:not(ul[data-type="checkbox"]) {
+	color: var(--text-color2);
+}
