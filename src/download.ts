@@ -1,16 +1,15 @@
-// TODO LATER:
-// - child page mentions with [[wiki]] syntax.
-
 import { Cache } from "./Cache"
 import { CachedApi } from "./CachedApi"
 import { Crawler } from "./Crawler"
 import { toUuid } from "./helpers/uuid"
 
+const rootPageId = "0e27612403084b2fb4a3166edafd623a"
+
 async function main() {
-	const cache = new Cache("data/cache2.db")
+	const cache = new Cache("data/cache.db")
 	const api = new CachedApi(cache)
 	const crawler = new Crawler(api)
-	await crawler.crawlPage(toUuid("0e27612403084b2fb4a3166edafd623a"))
+	await crawler.crawlPage(toUuid(rootPageId))
 	console.log("DONE")
 }
 
